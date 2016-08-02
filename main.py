@@ -25,7 +25,7 @@ channel.queue_bind(exchange='regner', queue='slack-format-zkillboard', routing_k
 logger.info('Connected to RabbitMQ server...')
 
 
-def format_killmail_message(zkb_data, kill):
+def format_killmail_message(zkb_data):
     killmail = zkb_data['killmail']
 
     if 'character' in killmail['victim']:
@@ -49,13 +49,7 @@ def format_killmail_message(zkb_data, kill):
     else:
         killer_corp = 'Unknown'
 
-    if kill:
-        title = '{} ({}) killed {} ({})'.format(killer_name, killer_corp, victim_name, victim_corp)
-        color = 'good'
-
-    else:
-        title = '{} ({}) got killed by {} ({})'.format(victim_name, victim_corp, killer_name, killer_corp)
-        color = 'danger'
+    title = '{} ({}) killed {} ({})'.format(killer_name, killer_corp, victim_name, victim_corp)
 
     damage_taken = {
         'title': 'Damage taken',
@@ -94,7 +88,7 @@ def format_killmail_message(zkb_data, kill):
                 'title': title,
                 'fallback': title,
                 'title_link': 'https://zkillboard.com/kill/{}/'.format(zkb_data['killID']),
-                'color': color,
+                # 'color': 'good',
                 'thumb_url': get_image_server_link(killmail['victim']['shipType']['id'], 'type', 64),
                 'fields': [
                     damage_taken,
@@ -111,7 +105,7 @@ def format_killmail_message(zkb_data, kill):
 def callback(ch, method, properties, body):
     data = json.loads(body.decode())
 
-    formatted_message = format_killmail_message(data['zkb_data'], data['kill'])
+    formatted_message = format_killmail_message(data['zkb_data'])
 
     logger.info('Formatted a Slack message for killmail with ID {}.'.format(data['zkb_data']['killID']))
 
